@@ -20,8 +20,8 @@ base_url = 'https://paper-api.alpaca.markets'
 # api = trade_api.REST(key_id=APCA_API_KEY_ID,api_version='v2')
 api = trade_api.REST(key_id= public_key, secret_key=secret_key, base_url=base_url, api_version='v2') # For real trading, don't enter a base_url
 
-ewa = api.get_barset('EWA','day', limit=100).df
-ewc = api.get_barset('EWC','day', limit=100).df
+ewa = api.get_barset('EWA','day', limit=1000).df
+ewc = api.get_barset('EWC','day', limit=1000).df
 
 ewa[('EWA','time')] = ewa.index
 ewa = ewa.reset_index(drop=('time',""))
@@ -31,26 +31,30 @@ ewc[('EWC','time')] = ewc.index
 ewc = ewc.reset_index(drop=('time',""))
 ewc.columns = ewc.columns.droplevel(0)
 
-ewa['close'].plot(label='EWA', figsize=(20,10), title='Closing Price by Min', use_index=True)
-ewc['close'].plot(label='EWC', use_index=True)
+ewa = ewa.iloc[0:99]
+ewc = ewc.iloc[0:99]
 
-plt.legend()
-plt.ylim((0,50))
+# ewa['close'].plot(label='EWA', figsize=(20,10), title='Closing Price by Min', use_index=True)
+# ewc['close'].plot(label='EWC', use_index=True)
+
+# plt.legend()
+# plt.ylim((0,50))
 # plt.show()
 
 print(ewc['time'].iloc[0], ewa['time'].iloc[0])
 print(np.corrcoef(ewa['close'],ewc["close"]))
+print()
 
 from statsmodels.tsa.stattools import coint, adfuller
 
-def stationarity(a, cutoff = 0.05):
-  a = np.ravel(a)
-  if adfuller(a)[1] < cutoff:
-    print('The series is stationary')
-    print('p-value = ', adfuller(a)[1])
-  else:
-    print('The series is NOT stationary')
-    print('p-value = ', adfuller(a)[1])
+print(adfuller(ewc['close']/ewa['close']))
+print()
 
-print(stationarity(ewc['close']/ewa['close']))
-print(coint(ewc['close'],ewa['close']))
+print(coint(ewa['close'],ewc['close']))
+
+(ewa['close']/ewc['close']).plot(label='ewa/ewc', figsize=(20,8), title='ratio', use_index=True)
+
+plt.legend()
+plt.ylim((0,1))
+plt.show()
+
